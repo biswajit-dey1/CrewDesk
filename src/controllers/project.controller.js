@@ -26,7 +26,7 @@ const createProject = async (req, res) => {
         }
 
 
-        const projectMember = await ProjectMember.create({
+        await ProjectMember.create({
             user: _id,
             project: new mongoose.Types.ObjectId(project._id),
             role: UserRoleEnum.ADMIN
@@ -105,8 +105,8 @@ const getProjectsofloggedInUser = async (req, res) => {
                         createdAt: 1,
                         createdBy: 1,
                     },
-                    role:1,
-                    _id:0
+                    role: 1,
+                    _id: 0
                 }
             }
 
@@ -120,8 +120,52 @@ const getProjectsofloggedInUser = async (req, res) => {
 
             })
     } catch (error) {
+        res
+            .status(501)
+            .json({
+                message: error.message,
+                succes: false
 
+            })
     }
 }
 
-export { createProject, getProjectsofloggedInUser }
+
+
+const getProjectbyId = async (req, res) => {
+
+    try {
+        const { projectId } = req.params
+
+        const project = await Project.findById(projectId)
+
+        if (!project) {
+            return res.status(404)
+                .json({
+                    succes: false,
+                    message: "Project not found"
+                })
+        }
+
+
+        return res.status(201)
+            .json({
+                succes: true,
+                message: "Project fetched Successfully",
+                project
+            })
+    } catch (error) {
+        res
+            .status(501)
+            .json({
+                succes: false,
+                message: error.message
+
+            })
+    }
+}
+
+
+
+
+export { createProject, getProjectsofloggedInUser,getProjectbyId }
