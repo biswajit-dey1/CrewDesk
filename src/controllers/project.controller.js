@@ -165,7 +165,92 @@ const getProjectbyId = async (req, res) => {
     }
 }
 
+const updateProject = async (req, res) => {
+
+    try {
+
+        const { name, description } = req.body
+        const { projectId } = req.params
+
+
+        const project = await Project.findByIdAndUpdate(
+            projectId,
+            {
+                name,
+                description,
+            },
+            { new: true },
+        );
 
 
 
-export { createProject, getProjectsofloggedInUser,getProjectbyId }
+        if (!project) {
+            return res.status(404)
+                .json({
+                    succes: false,
+                    message: "Project not found"
+                })
+        }
+
+        return res.status(201)
+            .json({
+                succes: true,
+                project,
+                message: "Project updated Sucessfully"
+            })
+
+    } catch (error) {
+        res
+            .status(501)
+            .json({
+                message: error.message,
+                succes: false
+
+            })
+    }
+
+}
+
+
+const deleteProject = async (req, res) => {
+
+    try {
+
+        const { projectId } = req.params
+
+        const project = await Project.findByIdAndDelete(projectId)
+
+        if (!project) {
+            return res.status(404)
+                .json({
+                    succes: false,
+                    message: "Project not found"
+                })
+        }
+
+        return res.status(200)
+            .json({
+                succes: true,
+                message: "Project deleted successfully"
+            })
+
+    } catch (error) {
+        res
+            .status(501)
+            .json({
+                message: error.message,
+                succes: false
+
+            })
+    }
+
+}
+
+
+
+
+
+
+
+
+export { createProject, getProjectsofloggedInUser, getProjectbyId, updateProject, deleteProject }

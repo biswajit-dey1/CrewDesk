@@ -40,7 +40,7 @@ const validateProjectPermission = (roles = []) =>
     try {
 
       const { projectId } = req.params
-      console.log(projectId)
+    
 
       if (!projectId) {
         return res.status(404)
@@ -65,7 +65,7 @@ const validateProjectPermission = (roles = []) =>
 
           })
       }
-      console.log(project)
+ 
 
       const givenRole = project?.role
     
