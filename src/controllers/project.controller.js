@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 import Project from "../models/Project.model.js"
 import ProjectMember from "../models/ProjectMember.model.js"
 import { UserRoleEnum } from "../utils/constant.js"
+import User from "../models/User.model.js"
 
 
 
@@ -246,11 +247,70 @@ const deleteProject = async (req, res) => {
 
 }
 
+const addMemberToProject = async (req, res) => {
+
+    const { userName, email, role } = req.body
+    const { projectId } = req.params
+
+    const user = await User.find({
+        $or: [{ userName }, { email }]
+    })
+
+    if (!user) {
+        return res.status(404)
+            .json({
+                succes: false,
+                message: "User not found"
+            })
+    }
+
+    const projectMember = await ProjectMember.findOneAndUpdate({
+        user: new mongoose.Types.ObjectId(user._id),
+        project: new mongoose.Types.ObjectId(projectId)
+    },
+        {
+            $set: {
+                user: new mongoose.Types.ObjectId(user._id),
+                project: new mongoose.Types.ObjectId(projectId),
+                role: role
+            }
+        },
+        {
+            upsert: true,
+            new: true
+        }
+
+    )
+
+    if (!projectMember) {
+        return res.status(404)
+            .json({
+                succes: false,
+                message: "Project member not found"
+            })
+    }
+
+
+    return res.status(201)
+             .json({
+                succes:true,
+                message:"Member added Succesfully",
+                projectMember
+             })
+
+
+}
 
 
 
 
 
 
-
-export { createProject, getProjectsofloggedInUser, getProjectbyId, updateProject, deleteProject }
+export {
+    createProject,
+    getProjectsofloggedInUser,
+    getProjectbyId,
+    updateProject,
+    deleteProject,
+    addMemberToProject
+}

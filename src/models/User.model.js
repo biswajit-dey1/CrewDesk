@@ -28,7 +28,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
     unique: true,
-    lowercase: true
+    lowercase: true,
+    sparse:true
   },
   avatar: {
     type: {

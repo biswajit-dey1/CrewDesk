@@ -23,6 +23,8 @@ const registerUser = async (req, res) => {
                 })
         }
 
+        const userName = email.split('@')[0].toLowerCase()
+        console.log(userName)
         const existedUser = await User.findOne({
             email
         })
@@ -41,7 +43,8 @@ const registerUser = async (req, res) => {
         const user = await User.create({
             fullName,
             email,
-            password: hashPassword
+            password: hashPassword,
+            userName
         })
 
         if (!user) {
@@ -63,6 +66,7 @@ const registerUser = async (req, res) => {
             })
 
     } catch (error) {
+        console.log(error)
         return res
             .status(500)
             .json({
