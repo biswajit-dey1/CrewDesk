@@ -33,7 +33,6 @@ const createProject = async (req, res) => {
             role: UserRoleEnum.ADMIN
         })
 
-        console.log("Project Member Created:", { user: _id, project: project._id });
         return res.status(201)
             .json({
                 succes: true,
@@ -249,59 +248,153 @@ const deleteProject = async (req, res) => {
 
 const addMemberToProject = async (req, res) => {
 
-    const { userName, email, role } = req.body
-    const { projectId } = req.params
+    try {
+        const { userName, email, role } = req.body
+        const { projectId } = req.params
 
-    const user = await User.find({
-        $or: [{ userName }, { email }]
-    })
+        const user = await User.findOne({
+            $or: [{ userName }, { email }]
+        })
 
-    if (!user) {
-        return res.status(404)
-            .json({
-                succes: false,
-                message: "User not found"
-            })
-    }
-
-    const projectMember = await ProjectMember.findOneAndUpdate({
-        user: new mongoose.Types.ObjectId(user._id),
-        project: new mongoose.Types.ObjectId(projectId)
-    },
-        {
-            $set: {
-                user: new mongoose.Types.ObjectId(user._id),
-                project: new mongoose.Types.ObjectId(projectId),
-                role: role
-            }
-        },
-        {
-            upsert: true,
-            new: true
+        if (!user) {
+            return res.status(404)
+                .json({
+                    succes: false,
+                    message: "User not found"
+                })
         }
 
-    )
+        const projectMember = await ProjectMember.findOneAndUpdate({
+            user: new mongoose.Types.ObjectId(user._id),
+            project: new mongoose.Types.ObjectId(projectId)
+        },
+            {
+                $set: {
+                    user: new mongoose.Types.ObjectId(user._id),
+                    project: new mongoose.Types.ObjectId(projectId),
+                    role: role
+                }
+            },
+            {
+                upsert: true,
+                new: true
+            }
 
-    if (!projectMember) {
-        return res.status(404)
+        )
+
+        if (!projectMember) {
+            return res.status(404)
+                .json({
+                    succes: false,
+                    message: "Project member not found"
+                })
+        }
+
+
+        return res.status(201)
             .json({
-                succes: false,
-                message: "Project member not found"
+                succes: true,
+                message: "Member added Succesfully",
+                projectMember
+            })
+
+    } catch (error) {
+        res
+            .status(501)
+            .json({
+                message: error.message,
+                succes: false
+
             })
     }
-
-
-    return res.status(201)
-             .json({
-                succes:true,
-                message:"Member added Succesfully",
-                projectMember
-             })
-
 
 }
 
 
+const getProjectMembers = async (req, res) => {
+
+    try {
+
+        const { projectId } = req.params
+
+        const project = await Project.findById(projectId)
+
+        if (!project) {
+            return res.status(404)
+                .json({
+                    succes: false,
+                    message: "Project not found"
+                })
+        }
+
+        const projectMember = await ProjectMember.aggregate([
+            {
+                $match: {
+                    project: new mongoose.Types.ObjectId(projectId)
+                }
+            },
+
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user",
+                    pipeline: [
+                        {
+                            $project: {
+                                fullName: 1,
+                                email: 1,
+                                userName: 1,
+                                avatar: 1
+                            }
+                        }
+                    ]
+                }
+            },
+
+            // {
+            //     $addFields: {
+            //         user: {
+            //             $arrayElemAt: ["$user", 0], this also can be used
+            //         },
+            //     },
+            // },
+            {
+                $unwind:"$user"
+            },
+
+            {
+                $project:{
+                    project:1,
+                    user:1,
+                    role:1,
+                    createdAt:1,
+                    updatedAt:1,
+                    _id:0
+                }
+            }
+
+        ])
+
+        return res.status(200)
+            .json({
+                succes: true,
+                message: "Project Member fetched Successfully ",
+                projectMember
+            })
+    } catch (error) {
+
+        res
+            .status(501)
+            .json({
+                message: error.message,
+                succes: false
+
+            })
+    }
+
+}
 
 
 
@@ -312,5 +405,6 @@ export {
     getProjectbyId,
     updateProject,
     deleteProject,
-    addMemberToProject
+    addMemberToProject,
+    getProjectMembers
 }

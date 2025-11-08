@@ -1,6 +1,7 @@
 import express from "express"
 
-import { addMemberToProject, createProject, deleteProject, getProjectbyId, getProjectsofloggedInUser, updateProject } from "../controllers/project.controller.js"
+import { addMemberToProject, createProject, deleteProject, getProjectbyId, getProjectMembers, getProjectsofloggedInUser, updateProject } from "../controllers/project.controller.js"
+
 import isLoggedIn, { validateProjectPermission } from "../middlewares/auth.middleware.js"
 import { AvailableUserRole, UserRoleEnum } from "../utils/constant.js"
 
@@ -15,5 +16,6 @@ projectRoutes.patch("/update-project/:projectId",isLoggedIn,validateProjectPermi
 projectRoutes.delete("/delete-project/:projectId",isLoggedIn,validateProjectPermission([UserRoleEnum.ADMIN]),deleteProject)
 
 projectRoutes.post("/addMember/:projectId",isLoggedIn,validateProjectPermission([UserRoleEnum.ADMIN]),addMemberToProject)
+projectRoutes.get("/getProjectMember/:projectId",isLoggedIn,validateProjectPermission(AvailableUserRole),getProjectMembers)
 
 export default projectRoutes
