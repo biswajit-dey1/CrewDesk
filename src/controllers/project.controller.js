@@ -51,8 +51,6 @@ const createProject = async (req, res) => {
             })
     }
 }
-
-
 const getProjectsofloggedInUser = async (req, res) => {
 
     try {
@@ -129,9 +127,6 @@ const getProjectsofloggedInUser = async (req, res) => {
             })
     }
 }
-
-
-
 const getProjectbyId = async (req, res) => {
 
     try {
@@ -310,7 +305,6 @@ const addMemberToProject = async (req, res) => {
 
 }
 
-
 const getProjectMembers = async (req, res) => {
 
     try {
@@ -395,8 +389,6 @@ const getProjectMembers = async (req, res) => {
     }
 
 }
-
-
 
 
 export {
