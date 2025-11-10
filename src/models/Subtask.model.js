@@ -2,18 +2,18 @@ import mongoose, { Schema } from "mongoose";
 
 const subTaskSchema = new mongoose.Schema({
     title: {
-        types: String,
+        type: String,
         required: true,
         trim: true
     },
 
     task: {
-        types: Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Task",
         required: true
     },
     isCompleted: {
-        types: Boolean,
+        type: Boolean,
         default: false,
     },
     createdBy: {
