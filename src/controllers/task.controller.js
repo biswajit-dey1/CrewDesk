@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 import Project from "../models/Project.model.js"
 import Task from "../models/Task.model.js"
 import User from "../models/User.model.js"
+import ProjectMember from "../models/ProjectMember.model.js"
 
 
 const createTask = async (req, res) => {
@@ -14,18 +15,35 @@ const createTask = async (req, res) => {
         const project = await Project.findById(projectId)
 
 
+
         if (!project) {
 
             return res.status(404)
                 .json({
                     success: false,
-                    message: "Project not found"
+                    message: "User is not a member of project"
                 })
         }
 
         const assignedToUser = await User.findOne({
             email: assignedTo
         })
+
+
+        const projectMember = await ProjectMember.find({
+            user: assignedToUser._id
+        })
+
+        console.log(projectMember)
+
+        if (projectMember.length == 0) {
+
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "User is not member to project"
+                })
+        }
 
 
         if (!assignedToUser) {
@@ -106,7 +124,7 @@ const getTasks = async (req, res) => {
                     from: "users",
                     localField: "assignedTo",
                     foreignField: "_id",
-                    as: "assignedToUser",
+                    as: "assignedTo",
                     pipeline: [
                         {
                             $project: {
@@ -118,18 +136,22 @@ const getTasks = async (req, res) => {
                     ]
                 }
             },
-
             {
-                $unwind: "$assignedToUser"
+                $addFields: {
+
+                    assignedTo: {
+                        $arrayElemAt: ["$assignedTo", 0]
+                    }
+                }
             },
 
-            {
-                $skip: skip
-            },
+            // {
+            //     $skip: skip
+            // },
 
-            {
-                $limit: 10
-            },
+            // {
+            //     $limit: 10
+            // },
 
         ])
 
