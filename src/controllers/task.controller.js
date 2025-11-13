@@ -216,13 +216,13 @@ const getTaskById = async (req, res) => {
             },
 
             {
-              $lookup:{
-                from:"subtasks",
-                localField:"_id",
-                foreignField:"task",
-                as:"subtasks"
+                $lookup: {
+                    from: "subtasks",
+                    localField: "_id",
+                    foreignField: "task",
+                    as: "subtasks"
 
-              }
+                }
             },
 
             {
@@ -232,9 +232,9 @@ const getTaskById = async (req, res) => {
                         $arrayElemAt: ["$assignedTo", 0]
                     },
                     subtasks: {
-                     $arrayElemAt: ["$subtasks",0]   
+                        $arrayElemAt: ["$subtasks", 0]
                     }
-                    
+
                 }
             },
         ])
@@ -265,7 +265,114 @@ const getTaskById = async (req, res) => {
 
 }
 
-const createSubTask = async (req,res) => {
+
+const updateTask = async (req, res) => {
+
+    const { title, description, assignedTo, status } = req.body
+    const { taskId } = req.params
+
+    try {
+
+        const existingTask = await Task.findById(taskId)
+
+        if (!existingTask) {
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "Task not found"
+                })
+        }
+
+
+        const assignedToUser = await User.findOne({
+            email: assignedTo
+        })
+
+
+        const projectMember = await ProjectMember.find({
+            user: assignedToUser._id
+        })
+
+
+
+        if (projectMember.length == 0) {
+
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "User is not member to project"
+                })
+        }
+
+
+        if (!assignedToUser) {
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "No User found"
+                })
+        }
+
+
+        const updateField = {
+            assignedBy: new mongoose.Types.ObjectId(req.user._id),
+
+        }
+
+        if (title !== undefined) updateField.title = title
+        if (description !== undefined) updateField.description = description
+        if (status !== undefined) updateField.status = status
+
+        if (assignedToUser !== undefined) {
+
+            updateField.assignedTo = new mongoose.Types.ObjectId(assignedToUser._id)
+
+        } else if (existingTask.assignedTo) {
+
+            updateField.assignedTo = new mongoose.Types.ObjectId(existingTask.assignedTo)
+        }
+
+
+        const updatedtask = await Task.findByIdAndUpdate(taskId,
+            updateField,
+            {
+                new: true
+            }
+        ).populate("assignedTo", "userName fullName avatar")
+            .populate("assignedBy", "userName fullName avatar")
+
+        if (!updatedtask) {
+
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "Failure in updating task"
+                })
+        }
+
+        return res.status(201)
+            .json({
+                success: true,
+                message: "Task updated succesfully",
+                updatedtask
+
+            })
+
+    } catch (error) {
+        return res.status(501)
+            .json({
+                success: false,
+                message: error.message
+            })
+    }
+
+
+}
+
+
+
+
+const createSubTask = async (req, res) => {
 
     const { taskId } = req.params
 
@@ -304,4 +411,4 @@ const createSubTask = async (req,res) => {
             })
     }
 }
-export { createTask, getTasks, getTaskById,createSubTask }
+export { createTask, getTasks, getTaskById, updateTask, createSubTask }
