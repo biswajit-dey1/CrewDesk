@@ -4,6 +4,7 @@ import Task from "../models/Task.model.js"
 import User from "../models/User.model.js"
 import ProjectMember from "../models/ProjectMember.model.js"
 import Subtask from "../models/Subtask.model.js"
+import { json } from "express"
 
 
 const createTask = async (req, res) => {
@@ -220,23 +221,65 @@ const getTaskById = async (req, res) => {
                     from: "subtasks",
                     localField: "_id",
                     foreignField: "task",
-                    as: "subtasks"
+                    as: "subtasks",
+                    pipeline: [
 
+                        {
+
+                            $lookup: {
+                                from: "users",
+                                localField: "createdBy",
+                                foreignField: "_id",
+                                as: "createdBy",
+                                pipeline: [
+                                    {
+                                        $project: {
+                                            _id: 1,
+                                            userName: 1,
+                                            fullName: 1,
+                                            email: 1,
+                                            avatar: 1
+                                        }
+                                    }
+                                ]
+
+                            }
+                        },
+
+                        {
+                         $addFields:{
+                            createdBy:{
+                                $arrayElemAt:["$createdBy",0]
+                            }
+                         }   
+                        }
+                    ]
                 }
             },
 
             {
-                $addFields: {
-
-                    assignedTo: {
-                        $arrayElemAt: ["$assignedTo", 0]
-                    },
-                    subtasks: {
-                        $arrayElemAt: ["$subtasks", 0]
+                $addFields:{
+                    assignedTo:{
+                        $arrayElemAt: ["$assignedTo",0]
                     }
-
                 }
-            },
+            }
+
+
+
+
+            // {
+            //     $addFields: {
+
+            //         assignedTo: {
+            //             $arrayElemAt: ["$assignedTo", 0]
+            //         },
+            //         subtasks: {
+            //             $arrayElemAt: ["$subtasks", 0]
+            //         }
+
+            //     }
+            // },
         ])
 
         if (!task || task.length == 0) {
@@ -247,7 +290,7 @@ const getTaskById = async (req, res) => {
                     message: "Task not found"
                 })
         }
-        return res.status(201)
+        return res.status(200)
             .json({
                 success: true,
                 message: "Task fetched succesfully",
@@ -369,7 +412,37 @@ const updateTask = async (req, res) => {
 
 }
 
+const deleteTask = async (req, res) => {
 
+    const { taskId } = req.params
+
+    try {
+        const deletedTask = await Task.findByIdAndDelete(taskId)
+
+        if (!deletedTask) {
+
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "Error in deleting task"
+                })
+        }
+
+        return res.status(200)
+            .json({
+                success: true,
+                message: "Task deleted succesfully"
+            })
+    } catch (error) {
+
+        return res.status(501)
+            .json({
+                success: false,
+                message: error.message
+            })
+
+    }
+}
 
 
 const createSubTask = async (req, res) => {
@@ -411,4 +484,13 @@ const createSubTask = async (req, res) => {
             })
     }
 }
-export { createTask, getTasks, getTaskById, updateTask, createSubTask }
+
+
+export {
+    createTask,
+    getTasks,
+    getTaskById,
+    updateTask,
+    deleteTask,
+    createSubTask
+}
