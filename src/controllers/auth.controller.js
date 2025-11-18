@@ -24,7 +24,7 @@ const registerUser = async (req, res) => {
         }
 
         const userName = email.split('@')[0].toLowerCase()
-        console.log(userName)
+        
         const existedUser = await User.findOne({
             email
         })

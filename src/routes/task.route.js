@@ -1,7 +1,7 @@
 import express from "express"
 import isLoggedIn, { validateProjectPermission } from "../middlewares/auth.middleware.js"
 import { AvailableUserRole, UserRoleEnum } from "../utils/constant.js"
-import { createSubTask, createTask, deleteTask, getTaskById, getTasks, updateTask } from "../controllers/task.controller.js"
+import { createSubTask, createTask, deleteSubTask, deleteTask, getTaskById, getTasks, updateSubtask, updateTask } from "../controllers/task.controller.js"
 
 const taskRouter = express.Router()
 
@@ -30,6 +30,12 @@ taskRouter.post("/:projectId/create-subTask/:taskId", isLoggedIn, validateProjec
     UserRoleEnum.ADMIN,
     UserRoleEnum.PROJECT_ADMIN
 ]), createSubTask)
+
+taskRouter.patch("/:projectId/update-subTask/:subtaskId",isLoggedIn,validateProjectPermission(AvailableUserRole),updateSubtask)
+taskRouter.delete("/:projectId/deleteSubTask/:subtaskId",isLoggedIn,validateProjectPermission([
+    UserRoleEnum.ADMIN,
+    UserRoleEnum.PROJECT_ADMIN
+]),deleteSubTask)
 
 
 export default taskRouter

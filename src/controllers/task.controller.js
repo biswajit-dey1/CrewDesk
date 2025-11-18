@@ -5,6 +5,7 @@ import User from "../models/User.model.js"
 import ProjectMember from "../models/ProjectMember.model.js"
 import Subtask from "../models/Subtask.model.js"
 import { json } from "express"
+import { UserRoleEnum } from "../utils/constant.js"
 
 
 const createTask = async (req, res) => {
@@ -36,7 +37,7 @@ const createTask = async (req, res) => {
             user: assignedToUser._id
         })
 
-        console.log(projectMember)
+  
 
         if (projectMember.length == 0) {
 
@@ -247,39 +248,25 @@ const getTaskById = async (req, res) => {
                         },
 
                         {
-                         $addFields:{
-                            createdBy:{
-                                $arrayElemAt:["$createdBy",0]
+                            $addFields: {
+                                createdBy: {
+                                    $arrayElemAt: ["$createdBy", 0]
+                                }
                             }
-                         }   
                         }
                     ]
                 }
             },
 
             {
-                $addFields:{
-                    assignedTo:{
-                        $arrayElemAt: ["$assignedTo",0]
+                $addFields: {
+                    assignedTo: {
+                        $arrayElemAt: ["$assignedTo", 0]
                     }
                 }
             }
 
 
-
-
-            // {
-            //     $addFields: {
-
-            //         assignedTo: {
-            //             $arrayElemAt: ["$assignedTo", 0]
-            //         },
-            //         subtasks: {
-            //             $arrayElemAt: ["$subtasks", 0]
-            //         }
-
-            //     }
-            // },
         ])
 
         if (!task || task.length == 0) {
@@ -485,6 +472,84 @@ const createSubTask = async (req, res) => {
     }
 }
 
+const updateSubtask = async (req, res) => {
+
+    const { subtaskId } = req.params
+    const { title, isCompleted } = req.body
+
+    try {
+
+        let subTask = await Subtask.findById(subtaskId)
+
+        if (!subTask) {
+
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "SubTask is not found"
+
+                })
+        }
+
+              
+        subTask = await Subtask.findByIdAndUpdate(subtaskId,
+            {
+                title: [UserRoleEnum.ADMIN, UserRoleEnum.PROJECT_ADMIN].includes(req?.user?.rolereq?.user?.role) ? title : undefined,
+                isCompleted
+            },
+            {
+                new: true
+            }
+        )
+
+        return res.status(201)
+            .json({
+                success: true,
+                message: "Subtask updated successfully",
+                subTask
+            })
+    } catch (error) {
+
+        return res.status(501)
+            .json({
+                success: false,
+                message: error.message
+            })
+
+    }
+}
+
+const deleteSubTask = async (req, res) => {
+
+    const { subtaskId } = req.params
+
+    try {
+        const subTask = await Subtask.findByIdAndDelete(subtaskId)
+
+        if (!subTask) {
+
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: "No Subtask found",
+                })
+        }
+
+        return res.status(200)
+            .json({
+                success: true,
+                message: "Subtask deleted Succesfully",
+                subTask
+            })
+    } catch (error) {
+        return res.status(501)
+            .json({
+                success: false,
+                message: error.message
+            })
+
+    }
+}
 
 export {
     createTask,
@@ -492,5 +557,7 @@ export {
     getTaskById,
     updateTask,
     deleteTask,
-    createSubTask
+    createSubTask,
+    updateSubtask,
+    deleteSubTask
 }
