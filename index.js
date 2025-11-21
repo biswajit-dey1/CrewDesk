@@ -5,6 +5,7 @@ import dotenv from "dotenv"
 import cookieParser from 'cookie-parser'
 import projectRoutes from './src/routes/project.route.js'
 import taskRouter from './src/routes/task.route.js'
+import notesRouter from './src/routes/note.route.js'
 
 dotenv.config()
 
@@ -18,6 +19,7 @@ app.use(cookieParser())
 app.use("/api/v1/auth",authRoute)
 app.use("/api/v1/project",projectRoutes)
 app.use("/api/v1/task",taskRouter)
+app.use("/api/v1/note",notesRouter)
 
 connectDb()
            .then(() =>{
